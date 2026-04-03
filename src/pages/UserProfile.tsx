@@ -69,7 +69,7 @@ export function UserProfile() {
       setError('Error al verificar código');
     }
   };
-  const [myPlace, setMyPlace] = useState<Place | null>(null);
+  const [myPlaces, setMyPlaces] = useState<Place[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -109,14 +109,14 @@ export function UserProfile() {
           setHistoryPlaces(places);
         }
 
-        // Fetch user's assigned place if they are an owner
-        if (user.role === 'owner' && user.assigned_place_id) {
+        // Fetch user's assigned places if they are an owner
+        if (user.role === 'owner' && user.assigned_place_ids && user.assigned_place_ids.length > 0) {
           try {
-            const place = await api.getPlace(user.assigned_place_id);
-            setMyPlace(place);
+            const places = await api.getPlacesByIds(user.assigned_place_ids);
+            setMyPlaces(places);
           } catch (e) {
-            console.error("Error fetching assigned place:", e);
-            setMyPlace(null);
+            console.error("Error fetching assigned places:", e);
+            setMyPlaces([]);
           }
         }
       } catch (err) {
@@ -520,9 +520,11 @@ export function UserProfile() {
                 <div className="flex justify-center py-12">
                   <Loader2 className="w-8 h-8 text-sky-500 animate-spin" />
                 </div>
-              ) : myPlace ? (
+              ) : myPlaces.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6">
-                  <HorizontalPlaceCard place={myPlace} />
+                  {myPlaces.map(place => (
+                    <HorizontalPlaceCard key={place.id} place={place} />
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/50 rounded-[2rem]">

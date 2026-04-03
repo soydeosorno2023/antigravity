@@ -136,6 +136,9 @@ export function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectingPlacesForUser, setSelectingPlacesForUser] = useState<User | null>(null);
+  const [tempAssignedPlaces, setTempAssignedPlaces] = useState<string[]>([]);
+  const [placeSearchTerm, setPlaceSearchTerm] = useState('');
   const [profileForm, setProfileForm] = useState({ full_name: '', email: '', avatar_url: '' });
   const [appSettings, setAppSettings] = useState<AppSettings>({
     logo_url: '',
@@ -178,8 +181,7 @@ export function AdminDashboard() {
 
     const unsubPlaces = api.subscribeToPlaces({ 
       admin: true, 
-      ownerId: user.role === 'owner' ? user.id : undefined,
-      assignedPlaceId: user.role === 'owner' ? user.assigned_place_id : undefined
+      ownerId: user.role === 'owner' ? user.id : undefined
     }, setPlaces);
     const unsubCategories = api.subscribeToCategories(setCategories);
     const unsubSubcategories = api.subscribeToSubcategories(setSubcategories);
@@ -207,14 +209,16 @@ export function AdminDashboard() {
         if (!token) return;
         
         for (const u of users) {
-          if (u.role === 'owner' && u.assigned_place_id) {
-            const place = places.find(p => p.id === u.assigned_place_id);
-            if (place && place.owner_id !== u.id) {
-              console.log(`Fixing owner_id for place ${place.id} to ${u.id}`);
-              try {
-                await api.updatePlace(token, place.id, { owner_id: u.id });
-              } catch (err) {
-                console.error(`Failed to fix owner_id for place ${place.id}:`, err);
+          if (u.role === 'owner' && u.assigned_place_ids && u.assigned_place_ids.length > 0) {
+            for (const placeId of u.assigned_place_ids) {
+              const place = places.find(p => p.id === placeId);
+              if (place && place.owner_id !== u.id) {
+                console.log(`Fixing owner_id for place ${place.id} to ${u.id}`);
+                try {
+                  await api.updatePlace(token, place.id, { owner_id: u.id });
+                } catch (err) {
+                  console.error(`Failed to fix owner_id for place ${place.id}:`, err);
+                }
               }
             }
           }
@@ -331,9 +335,14 @@ export function AdminDashboard() {
       const placeToDelete = places.find(p => p.id === id);
       await api.deletePlace(token, id);
       
-      // Clear owner's assigned_place_id
+      // Clear owner's assigned_place_ids
       if (user?.role === 'admin' && placeToDelete?.owner_id) {
-        await api.updateUser(placeToDelete.owner_id, { assigned_place_id: null as any });
+        const ownerToUpdate = users.find(u => u.id === placeToDelete.owner_id);
+        if (ownerToUpdate && ownerToUpdate.assigned_place_ids) {
+          await api.updateUser(placeToDelete.owner_id, { 
+            assigned_place_ids: ownerToUpdate.assigned_place_ids.filter(id => id !== placeToDelete.id) 
+          });
+        }
       }
       
       setConfirmDelete(null);
@@ -435,45 +444,53 @@ export function AdminDashboard() {
       
       // Get current user data to check for previous assigned_place_id and role
       const currentUser = users.find(u => u.id === userId);
-      const previousPlaceId = currentUser?.assigned_place_id;
+      const previousPlaceIds = currentUser?.assigned_place_ids || [];
       const currentRole = 'role' in data ? data.role : currentUser?.role;
       
-      // If role is changed away from owner, we should clear the assigned place
-      if ('role' in data && data.role !== 'owner' && previousPlaceId) {
-        data.assigned_place_id = null as any;
+      // If role is changed away from owner, we should clear the assigned places
+      if ('role' in data && data.role !== 'owner' && previousPlaceIds.length > 0) {
+        data.assigned_place_ids = [];
       }
 
-      const currentAssignedPlaceId = 'assigned_place_id' in data ? data.assigned_place_id : previousPlaceId;
+      const currentAssignedPlaceIds = 'assigned_place_ids' in data ? data.assigned_place_ids : previousPlaceIds;
       
       await api.updateUser(userId, data);
       
       const token = await auth.currentUser?.getIdToken();
       if (token) {
-        // If assigned_place_id is being updated (either explicitly or because role changed)
-        if ('assigned_place_id' in data) {
-          // If there was a previous place, clear its owner_id
-          if (previousPlaceId && previousPlaceId !== data.assigned_place_id) {
-            await api.updatePlace(token, previousPlaceId, { owner_id: null });
+        // If assigned_place_ids is being updated (either explicitly or because role changed)
+        if ('assigned_place_ids' in data) {
+          const newPlaceIds = data.assigned_place_ids || [];
+          
+          // Unassign from old places not in new list
+          for (const oldId of previousPlaceIds) {
+            if (!newPlaceIds.includes(oldId)) {
+               await api.updatePlace(token, oldId, { owner_id: null });
+            }
           }
           
-          // If a new place is assigned, set its owner_id (only if the user is an owner)
-          if (data.assigned_place_id) {
-            await api.updatePlace(token, data.assigned_place_id, { 
-              owner_id: currentRole === 'owner' ? userId : null 
-            });
+          // Assign to new places
+          for (const newId of newPlaceIds) {
+            if (!previousPlaceIds.includes(newId)) {
+               await api.updatePlace(token, newId, { 
+                 owner_id: currentRole === 'owner' ? userId : null 
+               });
+            }
           }
         } 
-        // If only the role is being updated to owner, and they already had a place
-        else if ('role' in data && data.role === 'owner' && currentAssignedPlaceId) {
-          await api.updatePlace(token, currentAssignedPlaceId, { owner_id: userId });
+        // If only the role is being updated to owner, and they already had places
+        else if ('role' in data && data.role === 'owner' && currentAssignedPlaceIds && currentAssignedPlaceIds.length > 0) {
+          for (const placeId of currentAssignedPlaceIds) {
+            await api.updatePlace(token, placeId, { owner_id: userId });
+          }
         }
       }
       
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...data } : u));
       toast.success('Usuario actualizado correctamente');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user:', error);
-      toast.error('Error al actualizar el usuario');
+      toast.error('Error: ' + (error.message || 'Error desconocido'));
     } finally {
       setIsUpdatingUser(null);
     }
@@ -516,18 +533,25 @@ export function AdminDashboard() {
           gallery: JSON.stringify(newPlace.gallery) 
         });
         
-        // Sync user's assigned_place_id
+        // Sync user's assigned_place_ids
         if (user?.role === 'admin') {
           if (owner_id !== editingPlace.owner_id) {
-            // Clear old owner's assigned_place_id
+            // Remove place from old owner's assigned_place_ids
             if (editingPlace.owner_id) {
-              await api.updateUser(editingPlace.owner_id, { assigned_place_id: null as any });
+              const oldOwner = users.find(u => u.id === editingPlace.owner_id);
+              if (oldOwner && oldOwner.assigned_place_ids) {
+                await api.updateUser(editingPlace.owner_id, { 
+                  assigned_place_ids: oldOwner.assigned_place_ids.filter(id => id !== editingPlace.id) 
+                });
+              }
             }
           }
           
-          // Always ensure the current owner has the assigned_place_id set
+          // Always ensure the current owner has the assigned_place_ids set
           if (owner_id) {
-            await api.updateUser(owner_id, { assigned_place_id: editingPlace.id });
+            const currentOwner = users.find(u => u.id === owner_id);
+            const newIds = [...(currentOwner?.assigned_place_ids || []), editingPlace.id];
+            await api.updateUser(owner_id, { assigned_place_ids: Array.from(new Set(newIds)) });
           }
         }
         
@@ -541,9 +565,11 @@ export function AdminDashboard() {
         const result = await api.createPlace(token, placeData);
         placeId = result.id;
         
-        // Sync user's assigned_place_id
+        // Sync user's assigned_place_ids
         if (user?.role === 'admin' && owner_id && placeId) {
-          await api.updateUser(owner_id, { assigned_place_id: placeId });
+          const currentOwner = users.find(u => u.id === owner_id);
+          const newIds = [...(currentOwner?.assigned_place_ids || []), placeId];
+          await api.updateUser(owner_id, { assigned_place_ids: Array.from(new Set(newIds)) });
         }
       }
       setIsAddingPlace(false);
@@ -1393,23 +1419,25 @@ export function AdminDashboard() {
                 </span>
               )}
             </button>
-            <button
-              onClick={() => {
-                if (activeTab === 'categories') setIsAddingCategory(true);
-                else if (activeTab === 'communes') setIsAddingCommune(true);
-                else {
-                  resetPlaceForm();
-                  setIsAddingPlace(true);
-                  setActiveTab('places');
-                }
-              }}
-              className="flex-grow lg:flex-none bg-sky-600 dark:bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-sky-700 dark:hover:bg-sky-600 transition-all shadow-lg shadow-sky-200 dark:shadow-none"
-            >
-              <Plus className="w-5 h-5" />
-              <span className="whitespace-nowrap">
-                {activeTab === 'categories' ? 'Nueva Categoría' : activeTab === 'communes' ? 'Nueva Comuna' : 'Nuevo Lugar'}
-              </span>
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => {
+                  if (activeTab === 'categories') setIsAddingCategory(true);
+                  else if (activeTab === 'communes') setIsAddingCommune(true);
+                  else {
+                    resetPlaceForm();
+                    setIsAddingPlace(true);
+                    setActiveTab('places');
+                  }
+                }}
+                className="flex-grow lg:flex-none bg-sky-600 dark:bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-sky-700 dark:hover:bg-sky-600 transition-all shadow-lg shadow-sky-200 dark:shadow-none"
+              >
+                <Plus className="w-5 h-5" />
+                <span className="whitespace-nowrap">
+                  {activeTab === 'categories' ? 'Nueva Categoría' : activeTab === 'communes' ? 'Nueva Comuna' : 'Nuevo Lugar'}
+                </span>
+              </button>
+            )}
           </div>
         </header>
 
@@ -1577,7 +1605,7 @@ export function AdminDashboard() {
                 <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Lugares</h2>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Gestiona los establecimientos y puntos de interés.</p>
               </div>
-              {!isAddingPlace && (
+              {!isAddingPlace && userRole === 'admin' && (
                 <button 
                   onClick={() => {
                     setEditingPlace(null);
@@ -1917,26 +1945,28 @@ export function AdminDashboard() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-8 py-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 accent-sky-600 dark:accent-sky-500"
-                        checked={!!newPlace.is_featured}
-                        onChange={(e) => setNewPlace({ ...newPlace, is_featured: e.target.checked })}
-                      />
-                      <span className="font-bold text-gray-700 dark:text-gray-300">Destacado</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="w-5 h-5 accent-sky-600 dark:accent-sky-500"
-                        checked={!!newPlace.is_active}
-                        onChange={(e) => setNewPlace({ ...newPlace, is_active: e.target.checked })}
-                      />
-                      <span className="font-bold text-gray-700 dark:text-gray-300">Activo</span>
-                    </label>
-                  </div>
+                  {userRole === 'admin' && (
+                    <div className="flex items-center gap-8 py-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 accent-sky-600 dark:accent-sky-500"
+                          checked={!!newPlace.is_featured}
+                          onChange={(e) => setNewPlace({ ...newPlace, is_featured: e.target.checked })}
+                        />
+                        <span className="font-bold text-gray-700 dark:text-gray-300">Destacado</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="w-5 h-5 accent-sky-600 dark:accent-sky-500"
+                          checked={!!newPlace.is_active}
+                          onChange={(e) => setNewPlace({ ...newPlace, is_active: e.target.checked })}
+                        />
+                        <span className="font-bold text-gray-700 dark:text-gray-300">Activo</span>
+                      </label>
+                    </div>
+                  )}
 
                   {editingPlace && (
                     <div className="md:col-span-2 space-y-8 mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
@@ -2551,7 +2581,7 @@ export function AdminDashboard() {
                         type="text"
                         disabled
                         className="w-full p-4 bg-gray-100 dark:bg-gray-700 border-none rounded-2xl text-gray-500 dark:text-gray-400 font-bold"
-                        value={places.find(p => p.id === user.assigned_place_id)?.name || 'Ninguno'}
+                        value={(user.assigned_place_ids && user.assigned_place_ids.length > 0) ? user.assigned_place_ids.map(id => places.find(p => p.id === id)?.name || 'Desconocido').join(', ') : 'Ninguno'}
                       />
                     </div>
                   )}
@@ -2967,17 +2997,19 @@ export function AdminDashboard() {
                 <h2 className="text-3xl font-black text-gray-900 dark:text-white mb-2">Notificaciones</h2>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Gestiona las alertas y ofertas que ven los usuarios registrados.</p>
               </div>
-              <button
-                onClick={() => {
-                  setIsAddingNotification(true);
-                  setEditingNotification(null);
-                  setNewNotification({ title: '', message: '', type: 'info', image_url: '', link_url: '', is_active: true });
-                }}
-                className="bg-sky-600 dark:bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-sky-700 dark:hover:bg-sky-600 transition-all"
-              >
-                <Plus className="w-5 h-5" />
-                Nueva Notificación
-              </button>
+              {userRole === 'admin' && (
+                <button
+                  onClick={() => {
+                    setIsAddingNotification(true);
+                    setEditingNotification(null);
+                    setNewNotification({ title: '', message: '', type: 'info', image_url: '', link_url: '', is_active: true });
+                  }}
+                  className="bg-sky-600 dark:bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-sky-700 dark:hover:bg-sky-600 transition-all"
+                >
+                  <Plus className="w-5 h-5" />
+                  Nueva Notificación
+                </button>
+              )}
             </div>
 
             {isAddingNotification && (
@@ -3140,21 +3172,23 @@ export function AdminDashboard() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => startEditNotification(notification)}
-                        className="p-2 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-xl transition-all"
-                        title="Editar"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                      <button 
-                        onClick={() => setConfirmDelete({ type: 'notification' as any, id: notification.id })}
-                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
+                    {userRole === 'admin' && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => startEditNotification(notification)}
+                          className="p-2 text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-xl transition-all"
+                          title="Editar"
+                        >
+                          <Edit2 className="w-5 h-5" />
+                        </button>
+                        <button 
+                          onClick={() => setConfirmDelete({ type: 'notification' as any, id: notification.id })}
+                          className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -3204,17 +3238,22 @@ export function AdminDashboard() {
                           </select>
                         </td>
                         <td className="px-6 py-4">
-                          <select
-                            className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none disabled:opacity-50 w-full max-w-[200px]"
-                            value={u.assigned_place_id || ''}
+                          <button
+                            onClick={() => {
+                              setSelectingPlacesForUser(u);
+                              setTempAssignedPlaces(u.assigned_place_ids || []);
+                              setPlaceSearchTerm('');
+                            }}
                             disabled={isUpdatingUser === u.id || u.role !== 'owner'}
-                            onChange={(e) => handleUpdateUser(u.id, { assigned_place_id: e.target.value || null })}
+                            className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm font-bold text-gray-900 dark:text-white hover:border-sky-500 hover:shadow-md transition-all disabled:opacity-50 text-left w-full truncate max-w-[200px] flex items-center justify-between"
                           >
-                            <option value="">Ninguno</option>
-                            {places.map(p => (
-                              <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                          </select>
+                            <span className="truncate">
+                              {u.assigned_place_ids && u.assigned_place_ids.length > 0
+                                ? `${u.assigned_place_ids.length} local(es)`
+                                : 'Seleccionar...'}
+                            </span>
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          </button>
                         </td>
                         <td className="px-6 py-4">
                           <button
@@ -3430,6 +3469,83 @@ export function AdminDashboard() {
             </div>
           </div>
         )}
+        {/* Place Selection Modal */}
+        {selectingPlacesForUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectingPlacesForUser(null)} />
+            <div className="relative bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]">
+              <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+                <h3 className="text-xl font-black text-gray-900 dark:text-white">
+                  Asignar Locales
+                </h3>
+                <button onClick={() => setSelectingPlacesForUser(null)} className="p-2 text-gray-400 hover:text-gray-500 bg-gray-50 dark:bg-gray-800 rounded-full transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 flex-1 overflow-hidden flex flex-col gap-4">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar local..."
+                    value={placeSearchTerm}
+                    onChange={(e) => setPlaceSearchTerm(e.target.value)}
+                    className="w-full bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl pl-12 pr-4 py-3 text-sm font-medium focus:ring-2 focus:ring-sky-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="flex-1 overflow-y-auto min-h-[300px] border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
+                  {places.filter(p => placeSearchTerm ? p.name.toLowerCase().includes(placeSearchTerm.toLowerCase()) : true).map(place => (
+                    <label key={place.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors block">
+                      <div className="relative flex items-center justify-center">
+                        <input 
+                          type="checkbox"
+                          checked={tempAssignedPlaces.includes(place.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setTempAssignedPlaces([...tempAssignedPlaces, place.id]);
+                            } else {
+                              setTempAssignedPlaces(tempAssignedPlaces.filter(id => id !== place.id));
+                            }
+                          }}
+                          className="peer appearance-none w-6 h-6 border-2 border-gray-300 dark:border-gray-600 rounded-md checked:bg-sky-500 checked:border-sky-500 transition-all cursor-pointer"
+                        />
+                        <Check className="w-4 h-4 text-white absolute pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" strokeWidth={3} />
+                      </div>
+                      <span className="font-bold text-gray-900 dark:text-white flex-1">{place.name}</span>
+                    </label>
+                  ))}
+                  {places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase())).length === 0 && (
+                    <div className="p-12 text-center text-gray-500 font-medium">No se encontraron locales.</div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50 dark:bg-gray-800/50">
+                <button
+                  onClick={() => setSelectingPlacesForUser(null)}
+                  className="px-6 py-3 font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl transition-all"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    handleUpdateUser(selectingPlacesForUser.id, { assigned_place_ids: tempAssignedPlaces });
+                    setSelectingPlacesForUser(null);
+                  }}
+                  className="px-6 py-3 font-bold text-white bg-sky-500 hover:bg-sky-600 rounded-xl transition-all shadow-lg shadow-sky-500/20 flex items-center gap-2"
+                >
+                  <span>Guardar Cambios</span>
+                  {tempAssignedPlaces.length > 0 && (
+                    <span className="bg-white/20 px-2 py-0.5 rounded-md text-xs">{tempAssignedPlaces.length}</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Confirm Delete Modal */}
         {confirmDelete && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">

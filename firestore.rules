@@ -133,7 +133,7 @@ service cloud.firestore {
     // ===============================================================
 
     function isValidUser(data) {
-      return hasOnlyAllowedFields(['id', 'username', 'role', 'full_name', 'email', 'avatar_url', 'address', 'phone', 'last_read_notifications_at', 'created_at', 'updated_at', 'assigned_place_id']) &&
+      return hasOnlyAllowedFields(['id', 'username', 'role', 'full_name', 'email', 'avatar_url', 'address', 'phone', 'last_read_notifications_at', 'created_at', 'updated_at', 'assigned_place_id', 'assigned_place_ids']) &&
              data.id is string &&
              data.username is string && data.username.size() > 0 && data.username.size() < 50 &&
              data.role in ['admin', 'owner', 'user'] &&
@@ -145,7 +145,8 @@ service cloud.firestore {
              (!('last_read_notifications_at' in data) || data.last_read_notifications_at is string || data.last_read_notifications_at == null) &&
              (!('created_at' in data) || data.created_at is timestamp) &&
              (!('updated_at' in data) || data.updated_at is timestamp) &&
-             (!('assigned_place_id' in data) || (data.assigned_place_id is string || data.assigned_place_id == null));
+             (!('assigned_place_id' in data) || (data.assigned_place_id is string || data.assigned_place_id == null)) &&
+             (!('assigned_place_ids' in data) || (data.assigned_place_ids is list || data.assigned_place_ids == null));
     }
 
     function isValidCategory(data) {
@@ -282,7 +283,7 @@ service cloud.firestore {
     // }
 
     function isValidUserForUpdate(data) {
-      return hasOnlyAllowedFields(['id', 'username', 'role', 'full_name', 'email', 'avatar_url', 'address', 'phone', 'last_read_notifications_at', 'created_at', 'updated_at', 'assigned_place_id']) &&
+      return hasOnlyAllowedFields(['id', 'username', 'role', 'full_name', 'email', 'avatar_url', 'address', 'phone', 'last_read_notifications_at', 'created_at', 'updated_at', 'assigned_place_id', 'assigned_place_ids']) &&
              (!('id' in data) || data.id is string) &&
              (!('username' in data) || (data.username is string && data.username.size() > 0 && data.username.size() < 50)) &&
              (!('role' in data) || data.role in ['admin', 'owner', 'user']) &&
@@ -294,7 +295,8 @@ service cloud.firestore {
              (!('last_read_notifications_at' in data) || data.last_read_notifications_at is string || data.last_read_notifications_at == null) &&
              (!('created_at' in data) || data.created_at is timestamp) &&
              (!('updated_at' in data) || data.updated_at is timestamp) &&
-             (!('assigned_place_id' in data) || (data.assigned_place_id is string || data.assigned_place_id == null));
+             (!('assigned_place_id' in data) || (data.assigned_place_id is string || data.assigned_place_id == null)) &&
+             (!('assigned_place_ids' in data) || (data.assigned_place_ids is list || data.assigned_place_ids == null));
     }
 
     match /users/{userId} {
@@ -302,12 +304,11 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
                       (request.resource.data.role == 'user' || 
                        (request.resource.data.email == "zonasur2011@gmail.com" && request.resource.data.role == 'admin'));
-      allow update: if (isOwner(userId) || isAdmin()) && isValidUserForUpdate(request.resource.data) && 
-                      (isAdmin() || 
-                       // Los propietarios pueden actualizar sus propios campos de perfil, pero no el rol ni el assigned_place_id
-                       (isOwner(userId) && 
+      allow update: if isAdmin() || (isOwner(userId) && isValidUserForUpdate(request.resource.data) && 
+                       // Los propietarios pueden actualizar sus propios campos de perfil, pero no el rol ni el assigned_place_ids
                         request.resource.data.role == resource.data.role &&
-                        request.resource.data.assigned_place_id == resource.data.assigned_place_id));
+                        (!('assigned_place_id' in request.resource.data) || request.resource.data.assigned_place_id == resource.data.assigned_place_id) &&
+                        (!('assigned_place_ids' in request.resource.data) || request.resource.data.assigned_place_ids == resource.data.assigned_place_ids));
       allow delete: if isAdmin();
     }
 
@@ -335,11 +336,7 @@ service cloud.firestore {
       allow read: if true;
       // Permitir actualizaciones si es admin, dueño del lugar, O si es una actualización de contador.
       // El Admin SDK (server.ts) tiene privilegios de admin, por lo que esto debería funcionar.
-      allow create: if (
-        isAdmin() || 
-        (isAuthenticated() && request.resource.data.owner_id == request.auth.uid) ||
-        (isAuthenticated() && request.resource.data.owner_id == null)
-      ) && isValidPlace(request.resource.data);
+      allow create: if isAdmin() && isValidPlace(request.resource.data);
       allow update: if (
         (isAdmin() || 
          isPlaceOwner(placeId) || 

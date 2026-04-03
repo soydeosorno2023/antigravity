@@ -8,7 +8,7 @@ export interface User {
   address?: string;
   phone?: string;
   last_read_notifications_at?: string;
-  assigned_place_id?: string;
+  assigned_place_ids?: string[];
 }
 
 export interface Category {
