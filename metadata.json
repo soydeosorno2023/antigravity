@@ -1,0 +1,7 @@
+{
+  "name": "miraosorno",
+  "description": "Guía turística digital de Osorno para descubrir los mejores lugares, gastronomía y actividades.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

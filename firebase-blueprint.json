@@ -1,0 +1,242 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "owner", "user"] },
+        "full_name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "avatar_url": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "assigned_place_id": { "type": "string" }
+      },
+      "required": ["username", "role", "full_name", "email"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Place category",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "image_url": { "type": "string" },
+        "slug": { "type": "string" },
+        "order_index": { "type": "integer" }
+      },
+      "required": ["name", "icon", "slug"]
+    },
+    "Place": {
+      "title": "Place",
+      "description": "A tourist place, restaurant, or hotel",
+      "type": "object",
+      "properties": {
+        "category_id": { "type": "string" },
+        "owner_id": { "type": "string" },
+        "name": { "type": "string" },
+        "full_description": { "type": "string" },
+        "profile_image_url": { "type": "string" },
+        "cover_image_url": { "type": "string" },
+        "gallery": { "type": "string" },
+        "address": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "phone": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "website": { "type": "string" },
+        "hours": { "type": "string" },
+        "youtube_video_url": { "type": "string" },
+        "slug": { "type": "string" },
+        "is_featured": { "type": "integer" },
+        "is_active": { "type": "integer" },
+        "favorites_count": { "type": "integer" },
+        "is_pet_friendly": { "type": "boolean" },
+        "has_parking": { "type": "boolean" },
+        "has_wifi": { "type": "boolean" },
+        "has_menu": { "type": "boolean" }
+      },
+      "required": ["category_id", "name", "full_description", "profile_image_url"]
+    },
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "An item in a restaurant's menu",
+      "type": "object",
+      "properties": {
+        "place_id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "image_url": { "type": "string" },
+        "category": { "type": "string" },
+        "sizes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number" }
+            }
+          }
+        },
+        "addons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number" }
+            }
+          }
+        },
+        "is_available": { "type": "boolean" },
+        "order_index": { "type": "integer" }
+      },
+      "required": ["place_id", "name", "price", "is_available"]
+    },
+    "Tour": {
+      "title": "Tour",
+      "description": "A tour offered by a place",
+      "type": "object",
+      "properties": {
+        "place_id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "string" },
+        "image_url": { "type": "string" }
+      },
+      "required": ["place_id", "name", "price"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "User review for a place",
+      "type": "object",
+      "properties": {
+        "place_id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "user_name": { "type": "string" },
+        "user_avatar": { "type": "string" },
+        "rating": { "type": "integer" },
+        "comment": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["place_id", "user_id", "rating", "comment"]
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "User favorite place",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "place_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user_id", "place_id"]
+    },
+    "AppSettings": {
+      "title": "App Settings",
+      "description": "Global application settings",
+      "type": "object",
+      "properties": {
+        "logo_url": { "type": "string" },
+        "hero_image_url": { "type": "string" },
+        "hero_title": { "type": "string" },
+        "hero_subtitle": { "type": "string" },
+        "contact_email": { "type": "string" },
+        "footer_text": { "type": "string" }
+      }
+    },
+    "Media": {
+      "title": "Media",
+      "description": "Uploaded media file metadata",
+      "type": "object",
+      "properties": {
+        "url": { "type": "string" },
+        "name": { "type": "string" },
+        "path": { "type": "string" },
+        "size": { "type": "integer" },
+        "mime_type": { "type": "string" },
+        "user_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["url", "name", "path", "user_id", "created_at"]
+    },
+    "Commune": {
+      "title": "Commune",
+      "description": "Commune specific configuration",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "image_url": { "type": "string" }
+      },
+      "required": ["name", "lat", "lng", "image_url"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "System notifications for users",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "image_url": { "type": "string" },
+        "link_url": { "type": "string" },
+        "is_active": { "type": "boolean" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "expires_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "message", "is_active", "created_at"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles"
+    },
+    "categories": {
+      "schema": "Category",
+      "description": "Collection of place categories"
+    },
+    "places": {
+      "schema": "Place",
+      "description": "Collection of tourist places"
+    },
+    "tours": {
+      "schema": "Tour",
+      "description": "Collection of tours"
+    },
+    "reviews": {
+      "schema": "Review",
+      "description": "Collection of reviews"
+    },
+    "favorites": {
+      "schema": "Favorite",
+      "description": "Collection of user favorites"
+    },
+    "settings": {
+      "schema": "AppSettings",
+      "description": "Global settings document"
+    },
+    "media": {
+      "schema": "Media",
+      "description": "Collection of uploaded media metadata"
+    },
+    "communes": {
+      "schema": "Commune",
+      "description": "Collection of communes with their custom images"
+    },
+    "notifications": {
+      "schema": "Notification",
+      "description": "Collection of system notifications"
+    },
+    "places/{placeId}/menu": {
+      "schema": "MenuItem",
+      "description": "Subcollection of menu items for a place"
+    }
+  }
+}

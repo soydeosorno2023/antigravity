@@ -1,0 +1,26 @@
+kind: AppStack
+version: v1
+runConfig:
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+scripts:
+  build: npm run build
+  start: npm start
+env:
+  - variable: VITE_GOOGLE_MAPS_API_KEY
+    value: "AIzaSyCqogiKlhb0Qh91UUuBb49sek7"
+  - variable: INSTAGRAM_CLIENT_ID
+    value: "1298780875439977"
+  - variable: INSTAGRAM_CLIENT_SECRET
+    value: "794c5b8f764aa75c3652d960a8121d2"
+  - variable: SMTP_HOST
+    value: "mail.soydeosorno.cl"
+  - variable: SMTP_PORT
+    value: "465"
+  - variable: SMTP_USER
+    value: "alertas@soydeosorno.cl"
+  - variable: SMTP_PASS
+    value: "tu_contraseña_aqui"
+  - variable: ADMIN_EMAIL
+    value: "zonasur2011@gmail.com"

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mira Osorno - Guía Turística y Comercial de Osorno, Chile</title>
+    <meta name="description" content="Descubre los mejores lugares, comercios y servicios en Osorno, Chile. Tu guía definitiva para explorar la ciudad, encontrar panoramas y apoyar el comercio local." />
+    <meta name="keywords" content="Osorno, Chile, turismo Osorno, guía Osorno, comercio local Osorno, que hacer en Osorno, restaurantes Osorno, hoteles Osorno, panoramas Osorno, servicios Osorno" />
+    <meta name="author" content="Mira Osorno" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://miraosorno.cl/" />
+    <meta property="og:title" content="Mira Osorno - Guía Turística y Comercial" />
+    <meta property="og:description" content="Explora Osorno como nunca antes. Encuentra los mejores lugares y servicios de la ciudad en un solo lugar." />
+    <meta property="og:image" content="/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://miraosorno.cl/" />
+    <meta property="twitter:title" content="Mira Osorno - Guía Turística y Comercial" />
+    <meta property="twitter:description" content="Explora Osorno como nunca antes. Encuentra los mejores lugares y servicios de la ciudad en un solo lugar." />
+    <meta property="twitter:image" content="/og-image.jpg" />
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#F5B027" />
+    <link rel="canonical" href="https://miraosorno.cl/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://images.unsplash.com">
+    <link rel="preconnect" href="https://wsrv.nl">
+    <link rel="preconnect" href="https://firebasestorage.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('theme');
+          // Always default to light mode on first visit (if theme is not set)
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.style.backgroundColor = '#030712';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.style.backgroundColor = '#ffffff';
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <style>
+      /* Prevent flash */
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      html.dark { background-color: #030712; color: #f3f4f6; }
+      html:not(.dark) { background-color: #ffffff; color: #111827; }
+    </style>
+  </head>
+  <body class="bg-white dark:bg-gray-950">
+    <!-- Splash Screen (Outside root to persist during React mount) -->
+    <div id="splash-screen" style="position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.5s ease-out; background-color: inherit;">
+      <style>
+        #splash-screen { background-color: #ffffff; }
+        .dark #splash-screen { background-color: #030712; }
+        @media (prefers-color-scheme: dark) {
+          #splash-screen { background-color: #030712; }
+        }
+        .spinner {
+          width: 50px;
+          height: 50px;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #F5B027;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .logo-text {
+          margin-top: 20px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-weight: 900;
+          font-size: 24px;
+          color: #F5B027;
+          letter-spacing: -1px;
+        }
+      </style>
+      <div class="spinner"></div>
+      <div class="logo-text">MIRA OSORNO</div>
+    </div>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Global function to remove splash screen
+      window.removeSplashScreen = () => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => {
+            splash.remove();
+          }, 500);
+        }
+      };
+
+      // Fallback: remove after 10 seconds if something goes wrong
+      setTimeout(window.removeSplashScreen, 10000);
+    </script>
+  </body>
+</html>
+
