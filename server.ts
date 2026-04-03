@@ -640,7 +640,7 @@ async function startServer() {
     if (fs.existsSync(distPath)) {
       console.log('Serving static files from:', distPath);
       app.use(express.static(distPath));
-      app.get('*', (req, res) => {
+      app.get(/.*/, (req, res) => {
         const indexPath = path.join(distPath, 'index.html');
         if (fs.existsSync(indexPath)) {
           res.sendFile(indexPath);
@@ -650,7 +650,7 @@ async function startServer() {
       });
     } else {
       console.error('CRITICAL: dist folder not found. Static files will not be served.');
-      app.get('*', (req, res) => {
+      app.get(/.*/, (req, res) => {
         res.status(500).send('dist folder not found. Please run npm run build and ensure it is uploaded.');
       });
     }
