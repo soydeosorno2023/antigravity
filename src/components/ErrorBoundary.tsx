@@ -35,6 +35,14 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md">
             Lo sentimos, ha ocurrido un error inesperado al cargar esta página.
           </p>
+          <div className="mb-8 p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-xl text-left max-w-lg w-full">
+            <p className="text-sm font-bold text-red-800 dark:text-red-400 mb-1">Detalles técnicos del error:</p>
+            <code className="text-xs text-red-600 dark:text-red-300 break-words font-mono">
+              {this.state.error?.message || this.state.error?.toString() || 'Error desconocido'}
+              <br/><br/>
+              {this.state.error?.stack?.split('\n').slice(0, 3).join('\n')}
+            </code>
+          </div>
           <button
             onClick={() => window.location.reload()}
             className="flex items-center gap-2 px-6 py-3 bg-[#F5B027] text-white rounded-xl font-bold hover:bg-[#E5A017] transition-colors shadow-lg"

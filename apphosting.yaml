@@ -9,7 +9,7 @@ scripts:
   start: npm start
 env:
   - variable: VITE_GOOGLE_MAPS_API_KEY
-    value: "AIzaSyCqogiKlhb0Qh91UUuBb49sek7"
+    value: "AIzaSyCqogiKlHb0Qh91UUUbB49sek7n7zc8-cI"
   - variable: INSTAGRAM_CLIENT_ID
     value: "1298780875439977"
   - variable: INSTAGRAM_CLIENT_SECRET
