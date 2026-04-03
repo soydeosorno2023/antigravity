@@ -10,7 +10,7 @@
     "dev": "tsx server.ts",
     "start": "node server.js",
     "build": "vite build && npm run build:server",
-    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --outfile=server.js --external:vite --external:fsevents --external:esbuild --external:express --external:firebase-admin --external:nodemailer --external:axios --external:firebase",
+    "build:server": "esbuild server.ts --bundle --platform=node --format=esm --packages=external --outfile=server.js",
     "preview": "vite preview",
     "clean": "node -e 'require(\"fs\").rmSync(\"dist\", { recursive: true, force: true })'",
     "lint": "tsc --noEmit"
