@@ -377,7 +377,11 @@ service cloud.firestore {
       allow update: if isAuthenticated() && request.auth.uid == resource.data.user_id && 
                       isValidReview(request.resource.data) && 
                       request.resource.data.created_at == resource.data.created_at &&
-                      request.resource.data.user_id == resource.data.user_id;
+                      request.resource.data.user_id == resource.data.user_id &&
+                      (
+                        (!('updated_at' in resource.data) && request.time.toMillis() > resource.data.created_at.toMillis() + 604800000) ||
+                        (('updated_at' in resource.data) && request.time.toMillis() > resource.data.updated_at.toMillis() + 604800000)
+                      );
       allow delete: if false;
     }
 

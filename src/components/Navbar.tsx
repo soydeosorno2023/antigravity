@@ -85,8 +85,9 @@ export function Navbar() {
       <nav className="bg-[#F5B027] rounded-full px-2 py-2 flex items-center gap-2 sm:gap-4 shadow-xl pointer-events-auto border-2 border-white/30">
         {navItems.map((item) => {
           const Icon = item.icon;
+          const decodedHash = decodeURIComponent(location.hash);
           const isActive = isPlaceDetail 
-            ? (item.path === '/' ? false : (location.hash === item.path || (location.hash === '' && item.path === '#info')))
+            ? (item.path === '/' ? false : (decodedHash === item.path || (location.hash === '' && item.path === '#info')))
             : location.pathname === item.path;
           
           const handleClick = (e: React.MouseEvent) => {

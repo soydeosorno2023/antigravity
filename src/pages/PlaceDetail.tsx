@@ -81,7 +81,7 @@ export function PlaceDetail() {
   }, [slug]);
 
   useEffect(() => {
-    const hash = routerLocation.hash;
+    const hash = decodeURIComponent(routerLocation.hash);
     const categoryName = place?.category_name || categories.find(c => c.id === place?.category_id)?.name;
     const category = categoryName?.trim().toLowerCase();
     
@@ -185,6 +185,13 @@ export function PlaceDetail() {
     console.error("Error parsing gallery:", e);
     gallery = [];
   }
+
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((acc, curr) => acc + curr.rating, 0) / reviews.length).toFixed(1)
+    : '0.0';
+  const roundedRating = Math.round(Number(averageRating));
+
+  const hasUserReviewed = user ? reviews.some(r => r.user_id === user.id) : false;
 
   const tabs = ['Inicio', 'Información', 'Menú', 'Reseñas', 'Galería', 'Tours'];
 
@@ -316,11 +323,11 @@ export function PlaceDetail() {
                 <div className="flex items-center flex-wrap gap-1 mt-0.5">
                   <div className="flex text-orange-400">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                      <Star key={i} className={`w-3.5 h-3.5 ${i < roundedRating ? 'fill-current' : 'text-gray-300 dark:text-gray-600'}`} />
                     ))}
                   </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white ml-1">4.8</span>
-                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium truncate">|(1,254 opiniones)</span>
+                  <span className="text-xs font-bold text-gray-900 dark:text-white ml-1">{averageRating}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium truncate">|({reviews.length} opiniones)</span>
                 </div>
               </div>
             </div>
@@ -504,33 +511,35 @@ export function PlaceDetail() {
               className="space-y-8"
             >
               {user ? (
-                <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700">
-                  <h3 className="font-bold text-gray-900 dark:text-white mb-4">Deja tu reseña</h3>
-                  <div className="flex items-center gap-2 mb-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        className={`w-8 h-8 cursor-pointer ${star <= (editingReview ? editingReview.rating : newReviewRating) ? 'fill-orange-400 text-orange-400' : 'text-gray-300'}`}
-                        onClick={() => editingReview ? setEditingReview({...editingReview, rating: star}) : setNewReviewRating(star)}
-                      />
-                    ))}
+                (editingReview || !hasUserReviewed) ? (
+                  <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-900 dark:text-white mb-4">{editingReview ? 'Edita tu reseña' : 'Deja tu reseña'}</h3>
+                    <div className="flex items-center gap-2 mb-4">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star 
+                          key={star} 
+                          className={`w-8 h-8 cursor-pointer ${star <= (editingReview ? editingReview.rating : newReviewRating) ? 'fill-orange-400 text-orange-400' : 'text-gray-300'}`}
+                          onClick={() => editingReview ? setEditingReview({...editingReview, rating: star}) : setNewReviewRating(star)}
+                        />
+                      ))}
+                    </div>
+                    <textarea 
+                      className="w-full p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mb-4"
+                      placeholder="Escribe tu reseña..."
+                      value={editingReview ? editingReview.comment : newReviewComment}
+                      onChange={(e) => editingReview ? setEditingReview({...editingReview, comment: e.target.value}) : setNewReviewComment(e.target.value)}
+                    />
+                    <button 
+                      onClick={handleSubmitReview}
+                      className="bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold hover:bg-sky-600 transition-all"
+                    >
+                      {editingReview ? 'Actualizar reseña' : 'Publicar reseña'}
+                    </button>
+                    {editingReview && (
+                      <button onClick={() => setEditingReview(null)} className="ml-4 text-gray-500 font-bold">Cancelar</button>
+                    )}
                   </div>
-                  <textarea 
-                    className="w-full p-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 mb-4"
-                    placeholder="Escribe tu reseña..."
-                    value={editingReview ? editingReview.comment : newReviewComment}
-                    onChange={(e) => editingReview ? setEditingReview({...editingReview, comment: e.target.value}) : setNewReviewComment(e.target.value)}
-                  />
-                  <button 
-                    onClick={handleSubmitReview}
-                    className="bg-sky-500 text-white px-6 py-3 rounded-2xl font-bold hover:bg-sky-600 transition-all"
-                  >
-                    {editingReview ? 'Actualizar reseña' : 'Publicar reseña'}
-                  </button>
-                  {editingReview && (
-                    <button onClick={() => setEditingReview(null)} className="ml-4 text-gray-500">Cancelar</button>
-                  )}
-                </div>
+                ) : null
               ) : (
                 <div className="bg-gray-50 dark:bg-gray-800 p-6 rounded-3xl text-center">
                   <p className="text-gray-600 dark:text-gray-400 mb-4">Inicia sesión para dejar una reseña.</p>

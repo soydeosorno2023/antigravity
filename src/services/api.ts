@@ -93,7 +93,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   }
 
   if (shouldThrow) {
-    throw new Error(JSON.stringify(errInfo));
+    throw new Error(errInfo.error);
   }
 }
 
@@ -1046,23 +1046,16 @@ export const api = {
     try {
       if (!auth.currentUser) throw new Error('Not authenticated');
 
-      // Check weekly limit
+      // Check if user already has a review
       const q = query(
         collection(db, 'reviews'),
         where('place_id', '==', placeId),
         where('user_id', '==', auth.currentUser.uid),
-        orderBy('created_at', 'desc'),
         limit(1)
       );
       const snapshot = await getDocs(q);
       if (!snapshot.empty) {
-        const lastReview = snapshot.docs[0].data();
-        const lastReviewDate = lastReview.created_at instanceof Timestamp ? lastReview.created_at.toDate() : new Date(lastReview.created_at);
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        if (lastReviewDate > oneWeekAgo) {
-          throw new Error('Solo puedes dejar una reseña por semana.');
-        }
+        throw new Error('Ya has comprobado y dejado una reseña en este lugar. Puedes editar tu reseña en lugar de crear una nueva.');
       }
 
       const reviewData = {
@@ -1084,6 +1077,21 @@ export const api = {
     const path = `reviews/${id}`;
     try {
       if (!auth.currentUser) throw new Error('Not authenticated');
+      
+      const reviewDoc = await getDoc(doc(db, 'reviews', id));
+      if (!reviewDoc.exists()) throw new Error('La reseña no existe.');
+      
+      const reviewData = reviewDoc.data();
+      const lastActionDateMillis = reviewData.updated_at 
+        ? (reviewData.updated_at instanceof Timestamp ? reviewData.updated_at.toMillis() : new Date(reviewData.updated_at).getTime())
+        : (reviewData.created_at instanceof Timestamp ? reviewData.created_at.toMillis() : new Date(reviewData.created_at).getTime());
+        
+      const now = Date.now();
+      const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000;
+      
+      if (now - lastActionDateMillis < sevenDaysInMillis) {
+         throw new Error('Solo puedes editar tu reseña 1 vez a la semana.');
+      }
       
       // Ensure only comment and rating can be updated
       const { comment, rating } = data;
