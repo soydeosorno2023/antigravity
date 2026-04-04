@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -40,40 +41,26 @@ async function startServer() {
   console.log('- FIREBASE_SERVICE_ACCOUNT:', process.env.FIREBASE_SERVICE_ACCOUNT ? 'Set' : 'Missing');
   console.log('- APP_URL:', process.env.APP_URL || 'Not set (using default)');
   
-  // Import the Firebase configuration
-  let firebaseConfig: any;
-  try {
-    console.log('Reading firebase-applet-config.json');
-    const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
-    if (fs.existsSync(configPath)) {
-      firebaseConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      console.log('Firebase config loaded from file');
-    } else {
-      console.warn('firebase-applet-config.json not found, using environment variables');
-      firebaseConfig = {
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        appId: process.env.FIREBASE_APP_ID,
-        apiKey: process.env.FIREBASE_API_KEY,
-        authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-        firestoreDatabaseId: process.env.FIREBASE_FIRESTORE_DATABASE_ID,
-        storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID
-      };
-    }
-  } catch (error) {
-    console.error('Failed to read firebase-applet-config.json:', error);
-    firebaseConfig = {};
-  }
+  // Firebase Configuration (exclusive environment variables)
+  const firebaseConfig = {
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    appId: process.env.FIREBASE_APP_ID,
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    firestoreDatabaseId: process.env.FIREBASE_FIRESTORE_DATABASE_ID || '(default)',
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID
+  };
 
-  // Initialize Firebase SDK on server
+  // Initialize Firebase SDK on server (Client SDK for some operations)
   let db: any;
   try {
-    if (firebaseConfig && firebaseConfig.projectId) {
+    if (firebaseConfig.projectId) {
       const firebaseApp = initializeApp(firebaseConfig);
-      db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+      db = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId === '(default)' ? undefined : firebaseConfig.firestoreDatabaseId);
       console.log('Firebase Client SDK initialized');
     } else {
-      console.error('CRITICAL: Firebase Project ID is missing. Client SDK not initialized.');
+      console.warn('Firebase Project ID missing. Client SDK not initialized.');
     }
   } catch (error) {
     console.error('Error initializing Firebase Client SDK:', error);

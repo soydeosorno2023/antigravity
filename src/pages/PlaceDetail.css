@@ -1,0 +1,210 @@
+.place-detail-modern {
+  position: relative;
+  min-height: 100vh;
+  padding-bottom: 5rem;
+  background-color: var(--bg-color);
+}
+
+.pd-hero-modern {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1.2; /* Taller hero as seen in model */
+  overflow: hidden;
+}
+
+.pd-hero-img-container {
+  width: 100%;
+  height: 100%;
+}
+
+.pd-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pd-hero-overlay-modern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(0,0,0,0.3) 0%,
+    rgba(0,0,0,0) 20%,
+    rgba(0,0,0,0) 80%,
+    rgba(0,0,0,0.4) 100%
+  );
+}
+
+.pd-hero-controls {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.pd-control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.3);
+  transition: all 0.2s ease;
+}
+
+.pd-control-btn.glass {
+  background: rgba(255,255,255,0.2) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.pd-control-btn.favorite {
+  background-color: #fb8383 !important;
+  border: none;
+}
+
+.pd-content-modern {
+  position: relative;
+  margin-top: -3rem;
+  padding: 2rem 1.5rem;
+  background: var(--bg-color);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  z-index: 2;
+  box-shadow: 0 -20px 40px rgba(0,0,0,0.05);
+}
+
+.pd-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+
+.pd-rating-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rating-val {
+  font-weight: 700;
+}
+
+.rating-count {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.pd-title-modern {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.pd-location-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.pd-tabs-modern {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 1.5rem;
+}
+
+.pd-tab-modern-btn {
+  padding: 0.75rem 0;
+  font-weight: 700;
+  color: #94a3b8;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.pd-tab-modern-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.pd-description-modern {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.pd-amenities-mini {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.amenity-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-color);
+  font-weight: 500;
+}
+
+.pd-booking-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  z-index: 100;
+}
+
+.price-tag-modern {
+  display: flex;
+  flex-direction: column;
+}
+
+.price-amount {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.price-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.booking-btn {
+  padding: 1rem 1.5rem !important;
+  font-size: 1rem !important;
+  border-radius: var(--radius-md) !important;
+}
+
+@media (min-width: 768px) {
+  .pd-hero-modern {
+    aspect-ratio: 16/9;
+  }
+  .place-detail-modern {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+}

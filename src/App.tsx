@@ -5,6 +5,7 @@
 
 import React, { Suspense } from 'react';
 import { Routes, Route, useLocation as useRouterLocation } from 'react-router-dom';
+import './App.css';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { FavoritesProvider } from './context/FavoritesContext';
@@ -28,14 +29,15 @@ const Register = lazyWithRetry(() => import('./pages/Register').then(m => ({ def
 const UserProfile = lazyWithRetry(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
 const Pricing = lazyWithRetry(() => import('./pages/Pricing').then(m => ({ default: m.Pricing })));
 const ForYou = lazyWithRetry(() => import('./pages/ForYou').then(m => ({ default: m.ForYou })));
+const Landing = lazyWithRetry(() => import('./pages/Landing').then(m => ({ default: m.Landing })));
 
 const PageLoader = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] w-full bg-white dark:bg-gray-950 transition-colors duration-300">
-    <div className="relative">
-      <Loader2 className="w-12 h-12 text-[#F5B027] animate-spin" />
-      <div className="absolute inset-0 blur-xl bg-[#F5B027]/20 rounded-full animate-pulse" />
+  <div className="page-loader">
+    <div className="loader-icon-wrapper">
+      <Loader2 className="loader-icon" />
+      <div className="loader-glow" />
     </div>
-    <p className="mt-4 text-sm font-bold text-gray-500 dark:text-gray-400 animate-pulse">
+    <p className="loader-text">
       Cargando...
     </p>
   </div>
@@ -95,10 +97,10 @@ export default function App() {
           <CartProvider>
             <FavoritesProvider>
               <LikesProvider>
-                <div className="min-h-[100dvh] bg-white dark:bg-gray-950 font-sans text-gray-900 dark:text-gray-100 flex flex-col transition-colors duration-300 overflow-x-hidden">
+                <div className="app-wrapper">
                   <Header />
                   <CartDrawer />
-                  <main className={`flex-grow relative min-h-[calc(100dvh-160px)] pt-20`}>
+                  <main className="app-main">
                     <ErrorBoundary>
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
@@ -112,6 +114,7 @@ export default function App() {
                           <Route path="/precios" element={<Pricing />} />
                           <Route path="/explorar" element={<CategoryView />} />
                           <Route path="/para-ti" element={<ForYou />} />
+                          <Route path="/bienvenido" element={<Landing />} />
                           {/* Catch all route to prevent blank screens on invalid paths */}
                           <Route path="*" element={<Home />} />
                         </Routes>

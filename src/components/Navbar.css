@@ -1,0 +1,75 @@
+.navbar-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem 1.5rem;
+  z-index: 900;
+  pointer-events: none;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 40px;
+  height: 72px;
+  padding: 0 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: #94a3b8;
+  position: relative;
+  transition: all 0.3s ease;
+  min-width: 44px;
+}
+
+.nav-item-active {
+  color: var(--primary);
+}
+
+.nav-icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.nav-item-active .nav-icon {
+  transform: translateY(-2px);
+}
+
+.nav-label {
+  display: none; /* Modern minimalist apps usually hide labels */
+}
+
+/* Small indicator dot for active state */
+.nav-item-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  box-shadow: 0 2px 5px rgba(38, 186, 164, 0.5);
+}
+
+@media (min-width: 768px) {
+  .navbar-wrapper {
+    padding-bottom: 2rem;
+  }
+}

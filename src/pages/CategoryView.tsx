@@ -13,8 +13,8 @@ import { useData } from '../context/DataContext';
 import { calculateDistance } from '../utils/distance';
 import { ElegantImage } from '../components/ElegantImage';
 import { LoginModal } from '../components/LoginModal';
-
 import { SEO } from '../components/SEO';
+import './CategoryView.css';
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -144,111 +144,106 @@ export function CategoryView() {
   const activeFiltersCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="pb-24 max-w-7xl mx-auto min-h-screen flex flex-col">
+    <div className="category-view">
       <SEO 
         title={category?.name || 'Explorar'}
         description={`Descubre los mejores lugares en la categoría ${category?.name || slug} en Osorno, Chile. Encuentra direcciones, fotos y más.`}
         canonical={`/categoria/${slug}`}
       />
-      <div className="px-6 pt-6">
-        <div className="flex flex-col gap-6 mb-8">
-          <div className="flex items-center gap-4 min-w-0">
-            <Link to="/" className="p-3 bg-gray-100 rounded-2xl hover:bg-gray-200 transition-colors flex-shrink-0">
-              <ChevronLeft className="w-6 h-6 text-gray-900" />
+      <div className="category-header-section">
+        <div className="category-header-top">
+          <div className="category-title-row">
+            <Link to="/" className="category-back-btn">
+              <ChevronLeft style={{ width: '1.5rem', height: '1.5rem' }} />
             </Link>
-            <div className="min-w-0">
-              <h1 className="text-2xl md:text-3xl font-black text-gray-900 truncate">
-                {loading ? <div className="h-8 w-32 skeleton rounded-lg" /> : (category?.name || 'Explorar')}
+            <div style={{ minWidth: 0 }}>
+              <h1 className="category-title">
+                {loading ? <div style={{ height: '2rem', width: '8rem', backgroundColor: 'var(--card-bg)', borderRadius: '0.5rem' }} /> : (category?.name || 'Explorar')}
               </h1>
-              <div className="text-gray-500 text-xs md:text-sm">
-                {loading ? <div className="h-4 w-24 skeleton rounded-lg mt-1" /> : `${filteredPlaces.length} lugares encontrados`}
+              <div className="category-subtitle">
+                {loading ? <div style={{ height: '1rem', width: '6rem', backgroundColor: 'var(--card-bg)', borderRadius: '0.5rem', marginTop: '0.25rem' }} /> : `${filteredPlaces.length} lugares encontrados`}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 w-full">
-            {/* Filter Dropdown */}
-            <div className="relative">
+          <div className="category-filters-row">
+            <div style={{ position: 'relative' }}>
               <button
                 onClick={() => {
                   setIsFilterOpen(!isFilterOpen);
                   setIsSubcategoryOpen(false);
                 }}
-                className={`w-full flex items-center justify-center gap-2 h-11 px-2 rounded-2xl text-[10px] sm:text-xs font-bold transition-all border ${
-                  activeFiltersCount > 0 
-                    ? 'bg-sky-50 border-sky-200 text-sky-600' 
-                    : 'bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
-                }`}
+                className={`filter-toggle-btn ${activeFiltersCount > 0 ? 'active' : ''}`}
               >
-                <Filter className="w-3.5 h-3.5 sm:w-4 h-4 flex-shrink-0" />
-                <span className="truncate">Filtros</span>
+                <Filter style={{ width: '1rem', height: '1rem', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Filtros</span>
                 {activeFiltersCount > 0 && (
-                  <span className="bg-sky-600 text-white w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] flex-shrink-0">
+                  <span style={{ backgroundColor: 'var(--primary)', color: 'white', width: '1rem', height: '1rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>
                     {activeFiltersCount}
                   </span>
                 )}
-                <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0, transform: isFilterOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
 
               <AnimatePresence>
                 {isFilterOpen && (
                   <>
                     <div 
-                      className="fixed inset-0 z-40" 
+                      style={{ position: 'fixed', inset: 0, zIndex: 40 }} 
                       onClick={() => setIsFilterOpen(false)} 
                     />
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden origin-top-left"
+                      className="filter-dropdown"
                     >
-                      <div className="p-2">
+                      <div className="filter-dropdown-content">
                         <button
                           onClick={() => toggleFilter('petFriendly')}
-                          className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                          className={`filter-option ${filters.petFriendly ? 'active' : ''}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${filters.petFriendly ? 'bg-sky-100 text-sky-600' : 'bg-gray-100 text-gray-500'}`}>
-                              <Dog className="w-4 h-4" />
+                          <div className="filter-option-left">
+                            <div className="filter-option-icon">
+                              <Dog style={{ width: '1rem', height: '1rem' }} />
                             </div>
-                            <span className={`text-sm font-bold ${filters.petFriendly ? 'text-sky-600' : 'text-gray-700 dark:text-gray-300'}`}>Mascotas</span>
+                            <span className="filter-option-text">Mascotas</span>
                           </div>
-                          {filters.petFriendly && <Check className="w-4 h-4 text-sky-600" />}
+                          {filters.petFriendly && <Check style={{ width: '1rem', height: '1rem', color: 'var(--primary)' }} />}
                         </button>
 
                         <button
                           onClick={() => toggleFilter('parking')}
-                          className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                          className={`filter-option ${filters.parking ? 'active' : ''}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${filters.parking ? 'bg-sky-100 text-sky-600' : 'bg-gray-100 text-gray-500'}`}>
-                              <ParkingCircle className="w-4 h-4" />
+                          <div className="filter-option-left">
+                            <div className="filter-option-icon">
+                              <ParkingCircle style={{ width: '1rem', height: '1rem' }} />
                             </div>
-                            <span className={`text-sm font-bold ${filters.parking ? 'text-sky-600' : 'text-gray-700 dark:text-gray-300'}`}>Estacionamiento</span>
+                            <span className="filter-option-text">Estacionamiento</span>
                           </div>
-                          {filters.parking && <Check className="w-4 h-4 text-sky-600" />}
+                          {filters.parking && <Check style={{ width: '1rem', height: '1rem', color: 'var(--primary)' }} />}
                         </button>
 
                         <button
                           onClick={() => toggleFilter('wifi')}
-                          className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                          className={`filter-option ${filters.wifi ? 'active' : ''}`}
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${filters.wifi ? 'bg-sky-100 text-sky-600' : 'bg-gray-100 text-gray-500'}`}>
-                              <Wifi className="w-4 h-4" />
+                          <div className="filter-option-left">
+                            <div className="filter-option-icon">
+                              <Wifi style={{ width: '1rem', height: '1rem' }} />
                             </div>
-                            <span className={`text-sm font-bold ${filters.wifi ? 'text-sky-600' : 'text-gray-700 dark:text-gray-300'}`}>Wi-Fi</span>
+                            <span className="filter-option-text">Wi-Fi</span>
                           </div>
-                          {filters.wifi && <Check className="w-4 h-4 text-sky-600" />}
+                          {filters.wifi && <Check style={{ width: '1rem', height: '1rem', color: 'var(--primary)' }} />}
                         </button>
                       </div>
                       
                       {activeFiltersCount > 0 && (
-                        <div className="p-2 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                        <div className="filter-clear">
                           <button
                             onClick={() => setFilters({ petFriendly: false, parking: false, wifi: false })}
-                            className="w-full py-2 text-xs font-bold text-gray-500 hover:text-red-500 transition-colors"
+                            className="filter-clear-btn"
                           >
                             Limpiar filtros
                           </button>
@@ -260,54 +255,47 @@ export function CategoryView() {
               </AnimatePresence>
             </div>
 
-            {/* Subcategories Dropdown */}
-            <div className="relative">
+            <div style={{ position: 'relative' }}>
               <button
                 onClick={() => {
                   setIsSubcategoryOpen(!isSubcategoryOpen);
                   setIsFilterOpen(false);
                 }}
                 disabled={subcategories.length === 0}
-                className={`w-full flex items-center justify-center gap-2 h-11 px-2 rounded-2xl text-[10px] sm:text-xs font-bold transition-all border ${
-                  selectedSubcategoryId 
-                    ? 'bg-sky-50 border-sky-200 text-sky-600' 
-                    : 'bg-gray-100 border-transparent text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400'
-                } ${subcategories.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`filter-toggle-btn ${selectedSubcategoryId ? 'active' : ''}`}
               >
-                <Tag className="w-3.5 h-3.5 sm:w-4 h-4 flex-shrink-0" />
-                <span className="truncate">
+                <Tag style={{ width: '1rem', height: '1rem', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedSubcategoryId 
                     ? subcategories.find(s => s.id === selectedSubcategoryId)?.name 
                     : 'Tipos'}
                 </span>
-                <ChevronDown className={`w-3 h-3 transition-transform flex-shrink-0 ${isSubcategoryOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown style={{ width: '0.75rem', height: '0.75rem', flexShrink: 0, transform: isSubcategoryOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
               </button>
 
               <AnimatePresence>
                 {isSubcategoryOpen && (
                   <>
                     <div 
-                      className="fixed inset-0 z-40" 
+                      style={{ position: 'fixed', inset: 0, zIndex: 40 }} 
                       onClick={() => setIsSubcategoryOpen(false)} 
                     />
                     <motion.div
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute left-1/2 -translate-x-1/2 mt-2 w-56 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden origin-top"
+                      className="filter-dropdown filter-dropdown-centered"
                     >
-                      <div className="p-2 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                      <div className="filter-dropdown-content">
                         <button
                           onClick={() => {
                             setSelectedSubcategoryId(null);
                             setIsSubcategoryOpen(false);
                           }}
-                          className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors group ${
-                            !selectedSubcategoryId ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-600' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          }`}
+                          className={`filter-option ${!selectedSubcategoryId ? 'active' : ''}`}
                         >
-                          <span className="text-sm font-bold">Todas</span>
-                          {!selectedSubcategoryId && <Check className="w-4 h-4 text-sky-600" />}
+                          <span className="filter-option-text">Todas</span>
+                          {!selectedSubcategoryId && <Check style={{ width: '1rem', height: '1rem', color: 'var(--primary)' }} />}
                         </button>
 
                         {subcategories.map(sub => (
@@ -317,12 +305,10 @@ export function CategoryView() {
                               setSelectedSubcategoryId(sub.id);
                               setIsSubcategoryOpen(false);
                             }}
-                            className={`w-full flex items-center justify-between p-3 rounded-xl transition-colors group ${
-                              selectedSubcategoryId === sub.id ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-600' : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
-                            }`}
+                            className={`filter-option ${selectedSubcategoryId === sub.id ? 'active' : ''}`}
                           >
-                            <span className="text-sm font-bold">{sub.name}</span>
-                            {selectedSubcategoryId === sub.id && <Check className="w-4 h-4 text-sky-600" />}
+                            <span className="filter-option-text">{sub.name}</span>
+                            {selectedSubcategoryId === sub.id && <Check style={{ width: '1rem', height: '1rem', color: 'var(--primary)' }} />}
                           </button>
                         ))}
                       </div>
@@ -332,19 +318,18 @@ export function CategoryView() {
               </AnimatePresence>
             </div>
 
-            {/* View Mode Toggle */}
             <button
               onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
-              className="w-full flex items-center justify-center gap-2 h-11 px-2 bg-gray-100 dark:bg-gray-800 rounded-2xl text-[10px] sm:text-xs font-bold text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all border border-transparent"
+              className="filter-toggle-btn"
             >
               {viewMode === 'list' ? (
                 <>
-                  <MapIcon className="w-3.5 h-3.5 sm:w-4 h-4" />
+                  <MapIcon style={{ width: '1rem', height: '1rem' }} />
                   <span>Mapa</span>
                 </>
               ) : (
                 <>
-                  <ListIcon className="w-3.5 h-3.5 sm:w-4 h-4" />
+                  <ListIcon style={{ width: '1rem', height: '1rem' }} />
                   <span>Lista</span>
                 </>
               )}
@@ -353,7 +338,7 @@ export function CategoryView() {
         </div>
       </div>
 
-      <div className="flex-grow px-6">
+      <div className="category-content-area">
         <AnimatePresence mode="wait">
           {viewMode === 'list' ? (
             <motion.div
@@ -362,7 +347,7 @@ export function CategoryView() {
               animate="visible"
               exit={{ opacity: 0, y: -20 }}
               variants={containerVariants}
-              className="flex flex-col gap-4"
+              className="list-view-container"
             >
               {loading ? (
                 [1, 2, 3, 4, 5].map((i) => <PlaceCardSkeleton key={i} />)
@@ -387,7 +372,7 @@ export function CategoryView() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="aspect-square md:aspect-auto md:h-[calc(100vh-380px)] rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl relative"
+              className="map-view-container"
             >
               <MapComponent places={filteredPlaces} />
             </motion.div>
@@ -396,12 +381,12 @@ export function CategoryView() {
       </div>
 
       {!loading && filteredPlaces.length === 0 && (
-        <div className="text-center py-20 px-6">
-          <div className="text-gray-200 mb-6">
-            <MapPin className="w-24 h-24 mx-auto" />
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <MapPin style={{ width: '6rem', height: '6rem' }} />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">No hay lugares aquí todavía</h2>
-          <p className="text-gray-500 max-w-xs mx-auto">Prueba ajustando los filtros o vuelve pronto para ver nuevas actualizaciones.</p>
+          <h2 className="empty-state-title">No hay lugares aquí todavía</h2>
+          <p className="empty-state-text">Prueba ajustando los filtros o vuelve pronto para ver nuevas actualizaciones.</p>
         </div>
       )}
 

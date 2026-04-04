@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Globe, Play, User, MapPin, Utensils, MessageSquare, Image, Info, Calendar } from 'lucide-react';
+import { Home, Compass, Heart, User, Search, Map as MapIcon, Utensils, MessageSquare, Image, Info, Calendar, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { api } from '../services/api';
 import { Place, Category } from '../types';
+import './Navbar.css';
 
 export function Navbar() {
   console.log("Navbar component is rendering");
@@ -57,10 +58,10 @@ export function Navbar() {
   }, [isPlaceDetail, location.pathname]);
   
   const mainNavItems = [
-    { icon: Home, label: 'Inicio', path: '/' },
-    { icon: Globe, label: 'Explorar', path: '/explorar' },
-    { icon: Play, label: 'Para Ti', path: '/para-ti' },
-    { icon: User, label: 'Perfil', path: '/perfil' },
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: Gift, label: 'Rewards', path: '/precios' },
+    { icon: Heart, label: 'Favorites', path: '/para-ti' },
+    { icon: User, label: 'Profile', path: '/perfil' },
   ];
 
   const categoryName = place?.category_name || categories.find(c => c.id === place?.category_id)?.name;
@@ -81,8 +82,8 @@ export function Navbar() {
   const navItems = isPlaceDetail ? placeNavItems : mainNavItems;
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-      <nav className="bg-[#F5B027] rounded-full px-2 py-2 flex items-center gap-2 sm:gap-4 shadow-xl pointer-events-auto border-2 border-white/30">
+    <div className="navbar-wrapper">
+      <nav className="navbar-container">
         {navItems.map((item) => {
           const Icon = item.icon;
           const decodedHash = decodeURIComponent(location.hash);
@@ -101,16 +102,14 @@ export function Navbar() {
               key={item.path}
               to={isPlaceDetail && item.path.startsWith('#') ? `${location.pathname}${item.path}` : item.path}
               onClick={handleClick}
-              className={`relative flex items-center justify-center h-12 rounded-full transition-all duration-300 ${
-                isActive ? 'bg-[#1A1A1A] text-white px-5' : 'text-[#1A1A1A] w-12 sm:w-14 hover:bg-black/10'
-              }`}
+              className={`nav-item ${isActive ? 'nav-item-active' : ''}`}
             >
-              <Icon className="w-5 h-5 relative z-10" />
+              <Icon className="nav-icon" />
               {isActive && (
                 <motion.span 
                   initial={{ opacity: 0, width: 0, marginLeft: 0 }}
                   animate={{ opacity: 1, width: 'auto', marginLeft: 8 }}
-                  className="text-sm font-bold relative z-10 whitespace-nowrap"
+                  className="nav-label"
                 >
                   {item.label}
                 </motion.span>

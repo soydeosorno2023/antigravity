@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, User, LogIn, Loader2, ChevronLeft, Eye, EyeOff, AlertCircle, Facebook } from 'lucide-react';
+import { Lock, User, LogIn, Loader2, ChevronLeft, Eye, EyeOff, Facebook, Check } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { SEO } from '../components/SEO';
 import { ElegantImage } from '../components/ElegantImage';
 import { optimizeImageUrl } from '../utils/image';
+import './AdminLogin.css';
 
 export function AdminLogin() {
   const { user, loading, isAdmin, isOwner, loginWithGoogle, loginWithFacebook, isLoggingIn } = useAuth();
@@ -64,181 +65,175 @@ export function AdminLogin() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <Loader2 className="w-10 h-10 text-sky-500 animate-spin" />
+    <div className="admin-login-wrapper">
+      <Loader2 className="loader-icon animate-spin" style={{ width: '40px', height: '40px', color: 'var(--primary)' }} />
     </div>
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 px-6 transition-colors duration-300">
+    <div className="admin-login-wrapper">
       <SEO title="Acceso Admin" noindex />
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 p-10 rounded-[3rem] shadow-2xl border border-gray-100 dark:border-gray-800 relative">
-        <button 
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-center text-gray-900 dark:text-white"
-        >
-          <ChevronLeft className="w-6 h-6" />
+      
+      <div className="login-card">
+        <button onClick={() => navigate(-1)} className="login-back-btn">
+          <ChevronLeft size={24} />
         </button>
-        <div className="text-center mb-10">
-          <div className="w-20 h-20 bg-sky-50 dark:bg-sky-900/20 rounded-3xl flex items-center justify-center text-sky-600 dark:text-sky-400 mx-auto mb-6">
-            <Lock className="w-10 h-10" />
+
+        <div className="login-header">
+          <div className="login-icon-box">
+            <Lock size={32} />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Acceso Dueño de Local</h1>
-          <p className="text-gray-500 dark:text-gray-400">Ingresa tus credenciales para continuar</p>
+          <h1 className="login-title">Bienvenido</h1>
+          <p className="login-subtitle">Ingresa tus credenciales para continuar</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Usuario</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="form-group">
+            <label className="form-label">Usuario</label>
+            <div className="input-wrapper">
+              <User className="input-icon" size={20} />
               <input
                 type="text"
                 required
-                className="w-full bg-gray-50 dark:bg-gray-800 border-none py-4 pl-12 pr-4 rounded-2xl focus:ring-2 focus:ring-sky-500 transition-all text-gray-900 dark:text-white"
+                className="login-input"
+                placeholder="Email o usuario"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Contraseña</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+
+          <div className="form-group">
+            <label className="form-label">Contraseña</label>
+            <div className="input-wrapper">
+              <Lock className="input-icon" size={20} />
               <input
                 type={showPassword ? "text" : "password"}
                 required
-                className="w-full bg-gray-50 dark:bg-gray-800 border-none py-4 pl-12 pr-12 rounded-2xl focus:ring-2 focus:ring-sky-500 transition-all text-gray-900 dark:text-white"
+                className="login-input"
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                className="password-toggle"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                <div className="w-5 h-5 border-2 border-gray-200 dark:border-gray-700 rounded-lg peer-checked:bg-sky-600 peer-checked:border-sky-600 transition-all"></div>
-                <div className="absolute inset-0 flex items-center justify-center text-white opacity-0 peer-checked:opacity-100 transition-all">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
+          <div className="form-options">
+            <label className="remember-me">
+              <input
+                type="checkbox"
+                hidden
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
+              <div className="checkbox-custom">
+                <Check className="check-icon" size={14} />
               </div>
-              <span className="text-sm font-bold text-gray-600 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">Recordarme</span>
+              <span className="remember-text">Recordarme</span>
             </label>
-            <Link to="/recuperar" className="text-sm font-bold text-sky-600 hover:text-sky-700">¿Olvidaste tu contraseña?</Link>
+            <Link to="/recuperar" className="forgot-link">¿Olvidaste tu contraseña?</Link>
           </div>
 
-          {error && <p className="text-red-500 text-sm font-medium text-center">{error}</p>}
+          {error && <div className="error-message">{error}</div>}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-sky-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-sky-700 transition-all shadow-xl shadow-sky-200 dark:shadow-none flex items-center justify-center gap-2 disabled:opacity-50"
+            className="login-submit-btn"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <LogIn className="w-5 h-5" />}
-            Iniciar Sesión
+            {isLoading ? <Loader2 size={24} className="animate-spin" /> : <LogIn size={24} />}
+            {isLoading ? 'Cargando...' : 'Iniciar Sesión'}
           </button>
 
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 font-medium">O continuar con</span>
-            </div>
+          <div className="divider">
+            <span className="divider-text">O usa tu celular</span>
           </div>
 
-          <button
-            type="button"
-            disabled={isLoggingIn}
-            onClick={async () => {
-              if (isLoggingIn) return;
-              setError('');
-              try {
-                await loginWithGoogle(rememberMe);
-              } catch (err: any) {
-                if (err.code === 'auth/cancelled-popup-request') {
-                  // Silent ignore as it's handled by guard
-                  return;
+          <div className="social-buttons">
+            <button
+              type="button"
+              disabled={isLoggingIn}
+              onClick={async () => {
+                if (isLoggingIn) return;
+                setError('');
+                try {
+                  await loginWithGoogle(rememberMe);
+                } catch (err: any) {
+                  if (err.code === 'auth/cancelled-popup-request') return;
+                  console.error("Google login error:", err);
+                  let message = 'Error al iniciar sesión con Google';
+                  if (err.code === 'auth/unauthorized-domain') {
+                    message = 'Error: Dominio no autorizado. Debes añadir "miraosorno.cl" en la consola de Firebase.';
+                  } else if (err.code === 'auth/popup-closed-by-user') {
+                    message = 'La ventana de inicio de sesión se cerró antes de completar.';
+                  } else if (err.message) {
+                    message = `Error: ${err.message}`;
+                  }
+                  setError(message);
                 }
-                console.error("Google login error:", err);
-                let message = 'Error al iniciar sesión con Google';
-                if (err.code === 'auth/unauthorized-domain') {
-                  message = 'Error: Dominio no autorizado. Debes añadir "miraosorno.cl" en la consola de Firebase (Authentication > Settings > Authorized domains).';
-                } else if (err.code === 'auth/popup-closed-by-user') {
-                  message = 'La ventana de inicio de sesión se cerró antes de completar.';
-                } else if (err.message) {
-                  message = `Error: ${err.message}`;
-                }
-                setError(message);
-              }
-            }}
-            className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl font-semibold text-sm sm:text-base hover:bg-gray-50 dark:hover:bg-gray-700 transition-all flex items-center justify-center gap-3 shadow-sm disabled:opacity-50 mb-3"
-          >
-            {isLoggingIn ? (
-              <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
-            ) : (
-              <ElegantImage 
-                src={optimizeImageUrl("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", 48)} 
-                className="w-5 h-5" 
-                alt="Google" 
-                containerClassName="w-5 h-5"
-                sizes="20px"
-              />
-            )}
-            {isLoggingIn ? 'Iniciando...' : 'Ingresar con Google'}
-          </button>
+              }}
+              className="social-btn google"
+            >
+              {isLoggingIn ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <ElegantImage 
+                  src={optimizeImageUrl("https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg", 48)} 
+                  className="w-5 h-5" 
+                  alt="Google" 
+                  containerClassName="w-5 h-5"
+                  sizes="20px"
+                />
+              )}
+              {isLoggingIn ? 'Iniciando...' : 'Continuar con Google'}
+            </button>
 
-          <button
-            type="button"
-            disabled={isLoggingIn}
-            onClick={async () => {
-              if (isLoggingIn) return;
-              setError('');
-              try {
-                await loginWithFacebook(rememberMe);
-              } catch (err: any) {
-                if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') {
-                  return;
+            <button
+              type="button"
+              disabled={isLoggingIn}
+              onClick={async () => {
+                if (isLoggingIn) return;
+                setError('');
+                try {
+                  await loginWithFacebook(rememberMe);
+                } catch (err: any) {
+                  if (err.code === 'auth/cancelled-popup-request' || err.code === 'auth/popup-closed-by-user') return;
+                  console.error("Facebook login error:", err);
+                  let message = 'Error al iniciar sesión con Facebook';
+                  if (err.code === 'auth/unauthorized-domain') {
+                    message = 'Error: Dominio no autorizado. Debes añadir "miraosorno.cl" en la consola de Firebase.';
+                  } else if (err.message) {
+                    message = `Error: ${err.message}`;
+                  }
+                  setError(message);
                 }
-                console.error("Facebook login error:", err);
-                let message = 'Error al iniciar sesión con Facebook';
-                if (err.code === 'auth/unauthorized-domain') {
-                  message = 'Error: Dominio no autorizado. Debes añadir "miraosorno.cl" en la consola de Firebase (Authentication > Settings > Authorized domains).';
-                } else if (err.message) {
-                  message = `Error: ${err.message}`;
-                }
-                setError(message);
-              }
-            }}
-            className="w-full bg-[#1877F2] text-white py-3 px-4 rounded-xl font-semibold text-sm sm:text-base hover:bg-[#166FE5] transition-all flex items-center justify-center gap-3 shadow-sm disabled:opacity-50 mb-6"
-          >
-            {isLoggingIn ? (
-              <Loader2 className="w-5 h-5 animate-spin text-white" />
-            ) : (
-              <Facebook className="w-5 h-5 fill-current" />
-            )}
-            {isLoggingIn ? 'Iniciando...' : 'Ingresar con Facebook'}
-          </button>
+              }}
+              className="social-btn facebook"
+            >
+              {isLoggingIn ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <Facebook size={20} fill="currentColor" />
+              )}
+              {isLoggingIn ? 'Iniciando...' : 'Continuar con Facebook'}
+            </button>
+          </div>
 
-          <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
-            ¿No tienes cuenta? <Link to="/registro" className="text-sky-600 font-bold">Regístrate aquí</Link>
-          </p>
+          <div className="login-footer">
+            <p>
+              ¿No tienes cuenta? <Link to="/registro" className="register-link">Regístrate aquí</Link>
+            </p>
+            <p style={{ marginTop: '1rem' }}>
+              <Link to="/admin" className="forgot-link" style={{ fontSize: '0.8rem', opacity: 0.7 }}>Acceso Dueños de Local</Link>
+            </p>
+          </div>
         </form>
       </div>
     </div>

@@ -1,0 +1,74 @@
+{
+  "categories": [
+    {
+      "name": "Restaurantes",
+      "slug": "restaurantes",
+      "icon": "Utensils",
+      "image_url": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4",
+      "order_index": 0
+    },
+    {
+      "name": "Hoteles",
+      "slug": "hoteles",
+      "icon": "Hotel",
+      "image_url": "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+      "order_index": 1
+    },
+    {
+      "name": "Destinos",
+      "slug": "destinos",
+      "icon": "Palmtree",
+      "image_url": "https://images.unsplash.com/photo-1506744038136-46273834b3fb",
+      "order_index": 2
+    },
+    {
+      "name": "Museos",
+      "slug": "museos",
+      "icon": "Map",
+      "image_url": "https://images.unsplash.com/photo-1503174971373-b1f69850bded",
+      "order_index": 3
+    }
+  ],
+  "places": [
+    {
+      "name": "Plaza de Armas de Osorno",
+      "slug": "plaza-de-armas",
+      "full_description": "El corazón de la ciudad, famosa por su gran fuente iluminada y sus áreas verdes. Un lugar ideal para pasear y conocer la escultura del Toro de Osorno.",
+      "category_name": "Destinos",
+      "address": "Osorno, Los Lagos, Chile",
+      "lat": -40.5739,
+      "lng": -73.1331,
+      "profile_image_url": "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0174676596.firebasestorage.app/o/images%2F1773589808925_481976720_559983523757257_4006716616786799264_n.jpg?alt=media&token=88d685ec-d696-4a21-bf69-2b9117cb3d1b",
+      "cover_image_url": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849",
+      "is_active": 1,
+      "is_featured": 1,
+      "favorites_count": 10
+    },
+    {
+      "name": "Catedral San Mateo",
+      "slug": "catedral-san-mateo",
+      "full_description": "Una joya arquitectónica moderna frente a la Plaza de Armas. Destaca por su torre de 45 metros y su diseño vanguardista.",
+      "category_name": "Destinos",
+      "address": "O'Higgins 701, Osorno, Los Lagos, Chile",
+      "lat": -40.5742,
+      "lng": -73.1335,
+      "profile_image_url": "https://images.unsplash.com/photo-1548625313-04099e71dc40",
+      "cover_image_url": "https://images.unsplash.com/photo-1548625313-04099e71dc40",
+      "is_active": 1,
+      "is_featured": 0
+    },
+    {
+      "name": "Parque Chuyaca",
+      "slug": "parque-chuyaca",
+      "full_description": "Parque temático con réplicas de la fauna pleistocénica que habitó la zona hace miles de años. Cuenta con áreas de picnic y piscinas.",
+      "category_name": "Destinos",
+      "address": "Avenida Julio Buschmann, Osorno, Chile",
+      "lat": -40.5785,
+      "lng": -73.1111,
+      "profile_image_url": "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
+      "cover_image_url": "https://images.unsplash.com/photo-1500382017468-9049fed747ef",
+      "is_active": 1,
+      "is_featured": 1
+    }
+  ]
+}

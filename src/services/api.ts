@@ -268,22 +268,8 @@ export const api = {
     });
   },
 
-  subscribeToPlaces(params: { categoryId?: string; featured?: boolean; admin?: boolean; ownerId?: string; assignedPlaceId?: string }, callback: (places: Place[]) => void): () => void {
+  subscribeToPlaces(params: { categoryId?: string; featured?: boolean; admin?: boolean; ownerId?: string }, callback: (places: Place[]) => void): () => void {
     const path = 'places';
-    
-    // If we have a specific assignedPlaceId, we can just fetch that document directly
-    // This is useful for owners whose owner_id might not be correctly set on the place yet
-    if (params.assignedPlaceId) {
-      return onSnapshot(doc(db, path, params.assignedPlaceId), (docSnap) => {
-        if (docSnap.exists()) {
-          callback([{ id: docSnap.id, ...docSnap.data() } as Place]);
-        } else {
-          callback([]);
-        }
-      }, (err) => {
-        handleFirestoreError(err, OperationType.GET, path, false);
-      });
-    }
 
     let q = query(collection(db, path));
     
@@ -378,6 +364,7 @@ export const api = {
       throw err;
     }
   },
+
 
   async getPlaceSecrets(id: string): Promise<any> {
     const path = `place_secrets/${id}`;
@@ -733,10 +720,11 @@ export const api = {
       }
       
       let userData = userDoc.data();
+      const email = userCredential.user.email || '';
+      const masterAdminEmail = 'zonasur2011@gmail.com'; 
       
       if (!userDoc.exists()) {
-        const email = userCredential.user.email || '';
-        const role = email === 'zonasur2011@gmail.com' ? 'admin' : 'user';
+        const role = email === masterAdminEmail ? 'admin' : 'user';
         
         userData = {
           id: userCredential.user.uid,
@@ -763,6 +751,14 @@ export const api = {
             handleFirestoreError(err, OperationType.CREATE, `users/${userCredential.user.uid}`);
             throw err;
           }
+        }
+      } else if (email === masterAdminEmail && userData?.role !== 'admin') {
+        // Self-heal: If the user exists but doesn't have the admin role, promote them
+        try {
+          await updateDoc(userDocRef, { role: 'admin' });
+          userData.role = 'admin';
+        } catch (err) {
+          console.error("Failed to self-heal admin role:", err);
         }
       }
 
@@ -1230,11 +1226,11 @@ export const api = {
   // Images
   async uploadImage(token: string | null, file: File): Promise<{ url: string }> {
     if (!auth.currentUser) {
-      console.error("Upload failed: No authenticated user found");
+      console.error("[Upload] Error: Usuario no autenticado");
       throw new Error("No estás autenticado. Por favor, inicia sesión de nuevo.");
     }
 
-    console.log(`Starting upload for file: ${file?.name}, size: ${file?.size} bytes`);
+    console.log(`[Upload] >>> INICIANDO PROCESO: ${file?.name} (${(file?.size / 1024).toFixed(1)} KB)`);
     
     let fileToUpload: File | Blob = file;
     let fileName = file?.name || 'image.jpg';
@@ -1242,39 +1238,52 @@ export const api = {
     // Convert to WebP if it's an image and not already WebP
     if (file?.type?.startsWith('image/') && file.type !== 'image/webp') {
       try {
-        console.log('Converting image to WebP...');
-        fileToUpload = await convertToWebP(file);
+        console.log('[Upload] [1/3] Iniciando conversión a WebP...');
+        // Set a 10s timeout for conversion to prevent hanging the whole process
+        const conversionPromise = convertToWebP(file);
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout de conversión')), 10000)
+        );
+        
+        fileToUpload = await Promise.race([conversionPromise, timeoutPromise]) as Blob;
+        
         // Change extension to .webp
         fileName = fileName.replace(/\.[^/.]+$/, "") + ".webp";
-        console.log(`Converted to WebP. New size: ${fileToUpload.size} bytes`);
+        console.log(`[Upload] [1/3] Conversión exitosa. Nuevo tamaño: ${(fileToUpload.size / 1024).toFixed(1)} KB`);
       } catch (conversionError) {
-        console.warn('Failed to convert to WebP, uploading original file:', conversionError);
+        console.warn('[Upload] [1/3] Falló conversión (se usará original):', conversionError);
+        fileToUpload = file; // Fallback to original
       }
+    } else {
+      console.log('[Upload] [1/3] Saltando conversión (ya es WebP o no es imagen)');
     }
 
     return new Promise((resolve, reject) => {
+      console.log('[Upload] [2/3] Iniciando subida a Firebase Storage...');
       const storageRef = ref(storage, `images/${Date.now()}_${fileName}`);
       const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
 
-      // Set a timeout of 30 seconds
+      // Set a timeout of 60 seconds (extended for large files)
       const timeout = setTimeout(() => {
         uploadTask.cancel();
-        reject(new Error("La subida tardó demasiado tiempo. Verifica tu conexión o si Storage está activado."));
-      }, 30000);
+        reject(new Error("Tiempo de espera agotado (60s). Revisa tu conexión."));
+      }, 60000);
 
       uploadTask.on('state_changed', 
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log(`Upload progress: ${progress.toFixed(2)}%`);
+          console.log(`[Upload] Progreso: ${progress.toFixed(2)}%`);
         }, 
         (error) => {
           clearTimeout(timeout);
-          console.error("Firebase Storage Error:", error);
+          console.error("Firebase Storage Error Detail:", error);
           let message = "Error al subir la imagen.";
           if (error.code === 'storage/unauthorized') {
-            message = "No tienes permisos para subir archivos. Revisa las reglas de Storage.";
+            message = "Sin permisos de escritura. Contacta al administrador.";
+          } else if (error.code === 'storage/retry-limit-exceeded') {
+             message = "Límite de reintentos excedido. Revisa tu red.";
           } else if (error.code === 'storage/canceled') {
-            message = "Subida cancelada o tiempo de espera agotado.";
+            message = "Subida cancelada o por tiempo excedido.";
           }
           reject(new Error(`${message} (${error.code})`));
         }, 
@@ -1295,10 +1304,10 @@ export const api = {
               created_at: serverTimestamp()
             });
 
-            console.log("Upload successful, URL:", url);
+            console.log("[Upload] Completado:", url);
             resolve({ url });
           } catch (urlErr) {
-            console.error("Error getting download URL or saving metadata:", urlErr);
+            console.error("[Upload] Error al guardar metadatos:", urlErr);
             reject(urlErr);
           }
         }
